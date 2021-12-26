@@ -1,111 +1,86 @@
-import React, { useContext, useState } from "react";
-import { RecaptchaVerifier,signInWithPhoneNumber } from "firebase/auth";
+import React, { useContext} from "react";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { Navigate, } from "react-router-dom";
 import { Auth } from "../config";
 import { AuthContext } from "../auth";
+import { InputBox, InputButton } from "./DefaultStyle";
 
-function LogIn() {
-  const [form,setForm] = useState(undefined);
-  const [otp,setOtp] = useState(undefined);
+const LogIn = ()=> {
+  const setUpRecaptcha = () => {
+    console.log("invoked");
+    window.recaptchaVerifier = new RecaptchaVerifier('sign-in-button', {
+      'size': 'invisible',
+      'callback': (response) => {
+        onSignInSubmit();
+      }
+    }, Auth);
+  }
+  const onSubmitOtp = (e) => {
+    e.preventDefault();
+    const { otp } = e.target.elements;
+    console.log(otp.value);
+    let otpInput = otp.value;
+    let optConfirm = window.confirmationResult;
+    optConfirm
+      .confirm(otpInput)
+      .then(function (result) {
+        let user = result.user;
+        console.log(user.uid);
+        console.log("signed in" + user);
+      })
+      .catch(function (error) {
+        console.log(error);
+        alert("Incorrect OTP");
+      });
+  };
+  const onSignInSubmit = (e) => {
 
-const onChangeHandler = (event) => {
-  setForm(event.target.value);
-};
+    e.preventDefault();
+    const { phonenumber } = e.target.elements;
+    console.log(phonenumber.value);
 
-const onChangeHandlerOtp = (event) => {
-  setOtp(event.target.value);
-  console.log(otp);
-};
+    setUpRecaptcha();
+    let phoneNumber = "+91" + phonenumber.value;
+    console.log(phoneNumber);
+    let appVerifier = window.recaptchaVerifier;
 
-const setUpRecaptcha = () =>{
-  console.log("invoked");
-  window.recaptchaVerifier = new RecaptchaVerifier('sign-in-button', {
-    'size': 'invisible',
-    'callback': (response) => {
-      onSignInSubmit();
-    }
-  }, Auth);
-}
-
-const onSubmitOtp = (e) => {
-  e.preventDefault();
-  let otpInput = otp;
-  let optConfirm = window.confirmationResult;
-  optConfirm
-    .confirm(otpInput)
-    .then(function (result) {
-      let user = result.user;
-      console.log("signed in"+user);
-    })
-    .catch(function (error) {
-      console.log(error);
-      alert("Incorrect OTP");
-    });
-};
-const onSignInSubmit = (e) => {
-  console.log("hello");
-  e.preventDefault();
-  setUpRecaptcha();
-  let phoneNumber = "+91" + form;
-  console.log(phoneNumber);
-  let appVerifier = window.recaptchaVerifier;
-  
     signInWithPhoneNumber(Auth, phoneNumber, appVerifier)
-    .then((confirmationResult) => {
-      window.confirmationResult = confirmationResult;
-      console.log("OTP is sent");
-    }).catch((error) => {
-      console.log(error);
-    });
-};
-const { currentUser } = useContext(AuthContext);
+      .then((confirmationResult) => {
+        window.confirmationResult = confirmationResult;
+        console.log("OTP is sent");
+      }).catch((error) => {
+        console.log(error);
+      });
+  };
+  const { currentUser } = useContext(AuthContext);
   if (currentUser) {
-    return <Navigate to="/Home"/>;
+    return <Navigate to="/Home" />;
   }
 
   return (
-<div>
-        <div fluid="sm" className="mt-3">
-          <div className="justify-content-center">
-            <div xs={12} md={6} lg={5}>
-              <h2 className="mb-3">Login</h2>
-              <form className="form" onSubmit={onSignInSubmit}>
-                <div id="sign-in-button"></div>
-                
-                  <input
-                    type="number"
-                    value={form}
-                    name="mobile"
-                    placeholder="Mobile Number"
-                    onChange={(event)=>{onChangeHandler(event)}}
-                    required
-                  />
-                
-                <button button="Submit" type="submit" >SUBMIT</button>
-              </form>
-            </div>
+    <div>
+      <div className="continer-sm position-absolute top-50 start-50 translate-middle shadow " style={{ width: "23rem", borderRadius: "12px" }}>
+        <div>
+          <center>
+            <h2 className="fw-bolder mt-3">Welcomeback</h2>
+            <p className="text-muted mb-3" style={{ fontSize: "12px" }}>Enter credentials to gain access</p>
+          </center>
+          <div className="p-3 mt-3"  >
+            <form onSubmit={onSignInSubmit}>
+              <div id="sign-in-button"></div>
+              <InputBox required={true} value="Phone Number" type="text" name="phonenumber"></InputBox>
+              <InputButton title="Send OTP" type="submit"></InputButton>
+            </form>
           </div>
-          <div className="justify-content-center">
-            <div xs={12} md={6} lg={5}>
-              <h2 className="mb-3">Enter OTP</h2>
-              <form className="form" onSubmit={onSubmitOtp}>
-                
-                  <input
-                    id="otp"
-                    type="number"
-                    name="otp"
-                    placeholder="OTP"
-                    value={otp}
-                    onChange={(event)=>{onChangeHandlerOtp(event)}}
-                  />
-                
-                <button button="Submit" type="submit" >SUBMIT</button>
-              </form>
-            </div>
+          <div className="p-3">
+            <form onSubmit={onSubmitOtp}>
+              <InputBox required={true} value="OTP" type="text" name="otp"></InputBox>
+              <InputButton title="Sign In" type="submit"></InputButton>
+            </form>
           </div>
         </div>
       </div>
+    </div>
   );
 }
-
 export default LogIn;

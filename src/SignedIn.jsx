@@ -10,13 +10,16 @@ const SignedIn = () =>{
       }).catch((error) => {
         });}
         const { currentUser } = useContext(AuthContext);
+        console.log(currentUser)
+        const name = currentUser.displayName;
+        const phone = currentUser.phoneNumber;
   if (!currentUser) {
     return <Navigate to="/LogIn" />;
   }
         
         return (
             <div>
-                <h1>user logged in</h1>
+                <h1>welcome {name } your phone number is {phone}</h1>
                 <button onClick={logOut} >Logout</button>
             </div>
         )
